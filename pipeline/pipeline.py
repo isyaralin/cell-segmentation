@@ -4,47 +4,81 @@ import os
 import glob
 from cellpose import models
 
-# Configurations for the files 
-data_dir = "/home/isyalin/TRAgen/dataset1/"
-output_dir = "/home/isyalin/TRAgen/output_masks/"
-os.makedirs(output_dir, exist_ok=True)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Load the frames in order to process 
-image_files = sorted(glob.glob(os.path.join(data_dir, "img?????.tif")))
-print(f"Found {len(image_files)} frames")
+DATA_DIR = os.path.join(BASE_DIR, "dataset1")
+OUTPUT_DIR = os.path.join(BASE_DIR, "output_masks")
 
-# Load the first frame ground truth mask as the first annotation 
-first_mask_path = os.path.join(data_dir, "mask00000.tif")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+image_files = sorted(
+    glob.glob(os.path.join(DATA_DIR, "img?????.tif"))
+)
+
+print(f"Found {len(image_files)} frames.")
+
+first_mask_path = os.path.join(
+    DATA_DIR,
+    "mask00000.tif"
+)
+
 first_mask = tifffile.imread(first_mask_path)
-print(f"First frame mask loaded: {first_mask.shape}, {len(np.unique(first_mask))-1} cells")
 
-# Cellpose model initialization 
-print("\nLoading Cellpose model")
-model = models.CellposeModel(gpu=True, pretrained_model="cyto3")
-print("Model ready!")
+print(
+    f"First frame contains "
+    f"{len(np.unique(first_mask)) - 1} cells."
+)
 
-# run segmentation on all frames 
-print("\nSegmenting all frames")
+print("\nLoading Cellpose model...")
+
+model = models.CellposeModel(
+    gpu=True,
+    pretrained_model="cyto3"
+)
+
+print("Model ready.")
+print("\nSegmenting frames...\n")
+
 for i, img_path in enumerate(image_files):
 
-    # Load image and normalize to float32
     image = tifffile.imread(img_path).astype(np.float32)
-    image = (image - image.min()) / (image.max() - image.min() + 1e-8)
 
-    # Run Cellpose
+    image = (
+        image - image.min()
+    ) / (
+        image.max() - image.min() + 1e-8
+    )
+
     masks, flows, styles = model.eval(
         image,
-        diameter=None,   # estimate cell diameter automatically 
-        channels=[0, 0], 
+        diameter=None,
+        channels=[0, 0],
         flow_threshold=0.4,
         cellprob_threshold=0.0
     )
 
-    # Save output mask
-    frame_num = os.path.basename(img_path).replace("img", "").replace(".tif", "")
-    out_path = os.path.join(output_dir, f"pred_mask{frame_num}.tif")
-    tifffile.imwrite(out_path, masks.astype(np.uint16))
+    frame_num = (
+        os.path.basename(img_path)
+        .replace("img", "")
+        .replace(".tif", "")
+    )
 
-    print(f"  Frame {i:3d}: {len(np.unique(masks))-1} cells detected → saved {os.path.basename(out_path)}")
+    out_path = os.path.join(
+        OUTPUT_DIR,
+        f"pred_mask{frame_num}.tif"
+    )
 
-print(f"\nDone! All masks saved to {output_dir}")
+    tifffile.imwrite(
+        out_path,
+        masks.astype(np.uint16)
+    )
+
+    pred_cells = len(np.unique(masks)) - 1
+
+    print(
+        f"Frame {frame_num}: "
+        f"{pred_cells} cells detected "
+        f"-> saved {os.path.basename(out_path)}"
+    )
+
+print("\nDone! All masks saved.")
