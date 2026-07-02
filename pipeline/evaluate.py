@@ -18,6 +18,12 @@ pred_files = sorted(
 
 print(f"Evaluating {len(gt_files)} frames...\n")
 
+if len(gt_files) == 0:
+	raise FileNotFoundError(f"No ground truth files found in {GT_DIR}")
+
+if len (pred_files) == 0:
+	raise FileNotFoundError(f"No prediction files found in {PRED_DIR}")
+
 results = []
 
 for gt_path, pred_path in zip(gt_files, pred_files):
