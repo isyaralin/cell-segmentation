@@ -6,8 +6,8 @@ from cellpose import models
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-DATA_DIR = os.path.join(BASE_DIR, "dataset1")
-OUTPUT_DIR = os.path.join(BASE_DIR, "output_masks")
+DATA_DIR = os.path.expanduser("~/TRAgen/dataset1")
+OUTPUT_DIR = os.path.expanduser("~/TRAgen/output_masks")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
