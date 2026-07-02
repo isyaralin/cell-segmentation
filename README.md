@@ -1,14 +1,42 @@
 # Isyar Ilsu Alin
 
+# Semi-Automatic Cell Segmentation in Time Lapse Microscopy Using First-Frame Initialization 
+The aim of this project is to generate synthetic microscopy data using TRAgen, and build a pipeline
+that uses the ground truth of the first frame to automatically segment all subsequent frames.
+The pipeline uses Cellpose as the segmentation model and evaluates results against TRAgen ground truth masks.
 
 
-## Getting started
+## Structure (Current)
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+pipeline/
+	pipeline.py 
+	evaluate.py 
+	visualize.py 
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+first_frame/
+	first_frame_init.py 
+	# will add more fies later on 
 
-## Add your files
+
+## Baseline 
+1. Run Cellpose segmentation:
+	python3 pipeline/pipeline.py 
+
+2. Evaluate:
+	python3 pipeline/visualize.py
+
+3. Generate visualizations:
+	python3 pipeline/visualize.py
+
+## Baseline Results (for the small 82 frame sample) 
+Mean IoU: 0.8520
+Mean Dice: 0.9200
+Mean F1: 0.9200
+
+## Next Step 
+Implement first-frame initializetion and cell ID propagation 
+
+
 
 * [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
 * [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
