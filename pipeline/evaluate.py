@@ -8,22 +8,20 @@ GT_DIR = os.path.expanduser("~/TRAgen/dataset1")
 PRED_DIR = os.path.expanduser("~/TRAgen/output_masks")
 CSV_OUT = os.path.expanduser("~/TRAgen/results.csv")
 
-gt_files = sorted(
-    glob.glob(os.path.join(GT_DIR, "mask?????.tif"))
-)
+gt_files = sorted(glob.glob(os.path.join(GT_DIR, "mask?????.tif")))
 
-pred_files = sorted(
-    glob.glob(os.path.join(PRED_DIR, "pred_mask?????.tif"))
-)
+pred_files = sorted(glob.glob(os.path.join(PRED_DIR, "pred_mask?????.tif")))
 
-print(f"Evaluating {len(gt_files)} frames...\n")
 
 if len(gt_files) == 0:
 	raise FileNotFoundError(f"No ground truth files found in {GT_DIR}")
 
-if len (pred_files) == 0:
+if len(pred_files) == 0:
 	raise FileNotFoundError(f"No prediction files found in {PRED_DIR}")
 
+if len(gt_files) != len(pred_files): 
+	raise ValueError(f"Mismatch: {len(gt_files)} GT masks but " 
+			 f"{len(pred_files)} predicted masks.") 
 results = []
 
 for gt_path, pred_path in zip(gt_files, pred_files):
