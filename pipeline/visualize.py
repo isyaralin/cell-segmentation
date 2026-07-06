@@ -11,6 +11,10 @@ os.makedirs(VIS_DIR, exist_ok=True)
 
 frames_to_show = [0, 20, 40, 60, 82]
 
+if not os.path.existed(os.path.join(PRED_DIR, f"pred_mask(frame_num:05d}.tif")):
+    print(f"Prediction for frame {frame_num:05d} not found.")
+    continue 
+
 for frame_num in frames_to_show:
 
     img = tifffile.imread(
