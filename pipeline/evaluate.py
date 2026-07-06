@@ -32,9 +32,7 @@ for gt_path, pred_path in zip(gt_files, pred_files):
     gt_cells = len(np.unique(gt)) - 1
     pred_cells = len(np.unique(pred)) - 1
 
-    count_error = abs(
-        gt_cells - pred_cells
-    )
+    count_error = abs(gt_cells - pred_cells)
 
     gt_bin = gt > 0
     pred_bin = pred > 0
@@ -106,6 +104,7 @@ for gt_path, pred_path in zip(gt_files, pred_files):
         f"Frame {frame}: "
         f"GT={gt_cells:3d} "
         f"Pred={pred_cells:3d} "
+	f"Error={count_error:2d} "
         f"IoU={iou:.4f} "
         f"Dice={dice:.4f} "
         f"F1={f1:.4f}"
@@ -114,13 +113,16 @@ for gt_path, pred_path in zip(gt_files, pred_files):
 ious = [r["iou"] for r in results]
 dices = [r["dice"] for r in results]
 f1s = [r["f1"] for r in results]
+count_errors = [r["count_error"] for r in results]
 
 print("\n" + "=" * 60)
 print(f"Mean IoU:  {np.mean(ious):.4f}")
 print(f"Mean Dice: {np.mean(dices):.4f}")
 print(f"Mean F1:   {np.mean(f1s):.4f}")
-print(f"Min IoU:   {np.min(ious):.4f}")
-print(f"Max IoU:   {np.max(ious):.4f}")
+print(f"Mean Cell Count Error: {np.mean(count_errors):.2f}")
+print(f"Maximum Cell Count Error: {np.max(count_error)}")
+print(f"Min IoU: {np.min(ious):.4f}")
+print(f"Max IoU: {np.max(ious):.4f}")
 print("=" * 60)
 
 with open(CSV_OUT, "w", newline="") as f:
