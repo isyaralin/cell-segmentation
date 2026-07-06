@@ -17,38 +17,15 @@ if not os.path.existed(os.path.join(PRED_DIR, f"pred_mask(frame_num:05d}.tif")):
 
 for frame_num in frames_to_show:
 
-    img = tifffile.imread(
-        os.path.join(
-            DATA_DIR,
-            f"img{frame_num:05d}.tif"
-        )
-    ).astype(np.float32)
+    img = tifffile.imread(os.path.join(DATA_DIR,f"img{frame_num:05d}.tif")).astype(np.float32)
 
-    gt = tifffile.imread(
-        os.path.join(
-            DATA_DIR,
-            f"mask{frame_num:05d}.tif"
-        )
-    )
+    gt = tifffile.imread(os.path.join(DATA_DIR, f"mask{frame_num:05d}.tif")
 
-    pred = tifffile.imread(
-        os.path.join(
-            PRED_DIR,
-            f"pred_mask{frame_num:05d}.tif"
-        )
-    )
+    pred = tifffile.imread(os.path.join(PRED_DIR,f"pred_mask{frame_num:05d}.tif"))
 
-    img = (
-        img - img.min()
-    ) / (
-        img.max() - img.min() + 1e-8
-    )
+    img = (img - img.min()) / (img.max() - img.min() + 1e-8)
 
-    fig, axes = plt.subplots(
-        1,
-        3,
-        figsize=(18, 6)
-    )
+    fig, axes = plt.subplots(1,3,figsize=(18, 6))
 
     fig.suptitle(
         f"Frame {frame_num:05d}",
