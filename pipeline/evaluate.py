@@ -37,15 +37,9 @@ for gt_path, pred_path in zip(gt_files, pred_files):
     gt_bin = gt > 0
     pred_bin = pred > 0
 
-    intersection = np.logical_and(
-        gt_bin,
-        pred_bin
-    ).sum()
+    intersection = np.logical_and(gt_bin, pred_bin).sum()
 
-    union = np.logical_or(
-        gt_bin,
-        pred_bin
-    ).sum()
+    union = np.logical_or(gt_bin, pred_bin).sum()
 
     gt_pixels = gt_bin.sum()
     pred_pixels = pred_bin.sum()
