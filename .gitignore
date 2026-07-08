@@ -5,3 +5,7 @@ venv/
 *.pyc
 *.csv
 *.png
+dataset1
+output_masks/
+visualizations/
+pipeline/results.csv
