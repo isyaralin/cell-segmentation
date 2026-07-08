@@ -1,4 +1,8 @@
 # Isyar Ilsu Alin
+### Important Note
+I started to implement this project on my private university gitLab account on January 2026 and worked on it for 3 months.
+After approval of my supervisor I pushed the existing progress into my personal GitHub account.
+The progress is set to be 8 to 9 months and will be extended to a more detailed project in the future.
 
 # Semi-Automatic Cell Segmentation in Time Lapse Microscopy Using First-Frame Initialization 
 The aim of this project is to generate synthetic microscopy data using TRAgen, and build a pipeline
