@@ -26,8 +26,8 @@ print("=" * 60)
 print("TRAgen Cell Segmentation Baseline")
 print("=" * 60)
 print(f"Dataset directory : {DATA_DIR}")
-print(f"Output directory  : {OUTPUT_DIR}")
-print(f"Frames found      : {len(image_files)}")
+print(f"Output directory : {OUTPUT_DIR}")
+print(f"Frames found : {len(image_files)}")
 
 # Load first-frame annotation
 # I will implement this as the  next step of the project
