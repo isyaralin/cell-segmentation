@@ -14,13 +14,13 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "output_masks")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 parser = argparse.ArgumentParser(
-	description = "Run Cellpose segmentation on all or selected frames")
+    description = "Run Cellpose segmentation on all or selected frames")
 
 parser.add_argument(
-	"--frames",
-	nargs="*",
-	help="Optional frmae numbers to process, for example --frames 20 35 72. "
-	     "If omitted, all frames are processed.")
+    "--frames",
+    nargs="*",
+    help="Optional frmae numbers to process, for example --frames 20 35 72. "
+         "If omitted, all frames are processed.")
 
 args = parser.parse_args()
 
@@ -41,25 +41,25 @@ if len(image_files) == 0:
 
 
 if args.frames:
-	selected_frames = {
-		frame.zfill(5)
-		for frame in args.frames
-		if frame.isdigit()
-	}
+    selected_frames = {
+        frame.zfill(5)
+        for frame in args.frames
+        if frame.isdigit()
+    }
 
-	image_files = [
-		image_path
-		for image_path in image_files
-		if os.parh.basename(image_path)
-		.replace("img", "")
-		.replace(".tif", "")
-		in selected_frames
-	]
+    image_files = [
+        image_path
+        for image_path in image_files
+        if os.parh.basename(image_path)
+        .replace("img", "")
+        .replace(".tif", "")
+        in selected_frames
+    ]
 
-	if len(image_files) == 0:
-		raise FileNotFoundError(
-			"None of the requested frames were found in the dataset"
-		)
+    if len(image_files) == 0:
+        raise FileNotFoundError(
+            "None of the requested frames were found in the dataset"
+        )
 
 
 print("=" * 60)
@@ -70,9 +70,9 @@ print(f"Output directory : {OUTPUT_DIR}")
 print(f"Frames found : {len(image_files)}")
 
 if args.frames:
-	print(f"Selected frames: {', '.join(args.frames)}")
+    print(f"Selected frames: {', '.join(args.frames)}")
 else:
-print("Selected frames: ALL")
+    print("Selected frames: ALL")
 
 # Load first-frame annotation
 # I will implement this as the  next step of the project
@@ -106,24 +106,24 @@ segmentation_times = []
 
 for index, image_path in enumerate(image_files, start=1):
     try:
-	# Get actual frame filename
-	frame_filename = os.path.basename(image_path)
-	
-	# Get frame number
-	frame_number = (
-		frame_filename
-		.replace("img", "")
-		.replace(".tif", "")
-	) 
+        # Get actual frame filename
+        frame_filename = os.path.basename(image_path)
 
-	# Load image 
+        # Get frame number
+        frame_number = (
+            frame_filename
+            .replace("img", "")
+            .replace(".tif", "")
+        )
+
+        # Load image
         image = tifffile.imread(image_path).astype(np.float32)
-        
-	#Normalize image 
-	image = (image - image.min()) / (image.max() - image.min() + 1e-8)
-	
-	# Measure Cellpose segmentation time only
-	start_time = time.perf_counter()
+
+        #Normalize image
+        image = (image - image.min()) / (image.max() - image.min() + 1e-8)
+
+        # Measure Cellpose segmentation time only
+        start_time = time.perf_counter()
 
         masks, flows, styles = model.eval(
             image,
@@ -132,15 +132,14 @@ for index, image_path in enumerate(image_files, start=1):
             flow_threshold=0.4,
             cellprob_threshold=0.0,
         )
-	
-	elapsed_time = time.perf_counter() - start_time
-	segmentation_times.append(elapsed_time)
 
-	output_path = os.path.join(
-		OUTPUT_DIR,
-		f"pred_mask{frame_number}.tif"
-	)
+        elapsed_time = time.perf_counter() - start_time
+        segmentation_times.append(elapsed_time)
 
+        output_path = os.path.join(
+            OUTPUT_DIR,
+            f"pred_mask{frame_number}.tif"
+        )
 
         tifffile.imwrite(output_path, masks.astype(np.uint16))
 
@@ -150,7 +149,7 @@ for index, image_path in enumerate(image_files, start=1):
             f"[{index:2d}/{total_frames}] "
             f"Frame {frame_filename} | "
             f"{detected_cells:3d} cells detected | "
-	    f"{elapsed_time:.3f} s | "
+            f"{elapsed_time:.3f} s | "
             f"Saved -> {os.path.basename(output_path)}"
         )
 
@@ -164,35 +163,36 @@ print("Segmentation completed successfully.")
 print(f"Predicted masks saved to:\n{OUTPUT_DIR}")
 
 if segmentation_times:
-	total_segmentation_time = sum(segmentation_times)
-	
-	average_segmentation_time = (total_segmentation_time / len(segmentation_times))
-	
-	print("\n========= Runtime ==========")
-	
-	print(
-	    f"Images segmented: "
-	    f"{len(segmentation_times)}"
-	)
-	
-	print(
-	    f"Total segmentation time: "
-	    f"{total_segmentation_time:.3f} seconds"
-	)
+    total_segmentation_time = sum(segmentation_times)
+    
+    average_segmentation_time = (total_segmentation_time / len(segmentation_times))
+    
+    print("\n========= Runtime ==========")
+    
+    print(
+        f"Images segmented: "
+        f"{len(segmentation_times)}"
+    )
+    
+    print(
+        f"Total segmentation time: "
+        f"{total_segmentation_time:.3f} seconds"
+    )
 
-	print(
-	   f"Average time per image: "
-	   f"{average_segmentation_time:.3f} seconds"
-	) 
-	
-	print(
-	   f"Minimum time per image: "
-	   f"{min(segmentation_times):.3f} seconds"
-	) 
-	
-	print(
-	   f"Maximum time per image: "
-	   f"{max(segmentation_times):.3f} seconds"
+    print(
+       f"Average time per image: "
+       f"{average_segmentation_time:.3f} seconds"
+    ) 
+    
+    print(
+       f"Minimum time per image: "
+       f"{min(segmentation_times):.3f} seconds"
+    ) 
+    
+    print(
+       f"Maximum time per image: "
+       f"{max(segmentation_times):.3f} seconds"
+    )
 
 print("=" * 60)
 
