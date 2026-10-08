@@ -1,6 +1,7 @@
 import os
 import glob
 import time 
+import argparse 
 import numpy as np
 import tifffile
 from cellpose import models
@@ -9,7 +10,21 @@ from cellpose import models
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "dataset1")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output_masks")
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+parser = argparse.ArgumentParser(
+	description = "Run Cellpose segmentation on all or selected frames")
+
+parser.add_argument(
+	"--frames",
+	nargs="*",
+	help="Optional frmae numbers to process, for example --frames 20 35 72. "
+	     "If omitted, all frames are processed.")
+
+args = parser.parse_args()
+
+
 
 # Check if the dataset exists 
 if not os.path.isdir(DATA_DIR):
@@ -20,8 +35,32 @@ if not os.path.isdir(DATA_DIR):
 
 # Load images
 image_files = sorted(glob.glob(os.path.join(DATA_DIR, "img*.tif")))
+
 if len(image_files) == 0:
     raise FileNotFoundError(f"No image files found inside:\n{DATA_DIR}")
+
+
+if args.frames:
+	selected_frames = {
+		frame.zfill(5)
+		for frame in args.frames
+		if frame.isdigit()
+	}
+
+	image_files = [
+		image_path
+		for image_path in image_files
+		if os.parh.basename(image_path)
+		.replace("img", "")
+		.replace(".tif", "")
+		in selected_frames
+	]
+
+	if len(image_files) == 0:
+		raise FileNotFoundError(
+			"None of the requested frames were found in the dataset"
+		)
+
 
 print("=" * 60)
 print("TRAgen Cell Segmentation Baseline")
@@ -29,6 +68,11 @@ print("=" * 60)
 print(f"Dataset directory : {DATA_DIR}")
 print(f"Output directory : {OUTPUT_DIR}")
 print(f"Frames found : {len(image_files)}")
+
+if args.frames:
+	print(f"Selected frames: {', '.join(args.frames)}")
+else:
+print("Selected frames: ALL")
 
 # Load first-frame annotation
 # I will implement this as the  next step of the project
@@ -62,9 +106,23 @@ segmentation_times = []
 
 for index, image_path in enumerate(image_files, start=1):
     try:
-        image = tifffile.imread(image_path).astype(np.float32)
-        image = (image - image.min()) / (image.max() - image.min() + 1e-8)
+	# Get actual frame filename
+	frame_filename = os.path.basename(image_path)
 	
+	# Get frame number
+	frame_number = (
+		frame_filename
+		.replace("img", "")
+		.replace(".tif", "")
+	) 
+
+	# Load image 
+        image = tifffile.imread(image_path).astype(np.float32)
+        
+	#Normalize image 
+	image = (image - image.min()) / (image.max() - image.min() + 1e-8)
+	
+	# Measure Cellpose segmentation time only
 	start_time = time.perf_counter()
 
         masks, flows, styles = model.eval(
@@ -78,21 +136,28 @@ for index, image_path in enumerate(image_files, start=1):
 	elapsed_time = time.perf_counter() - start_time
 	segmentation_times.append(elapsed_time)
 
-        frame_name = os.path.basename(image_path).replace("img", "").replace(".tif", "")
-        output_path = os.path.join(OUTPUT_DIR, f"pred_mask{frame_name}.tif")
+	output_path = os.path.join(
+		OUTPUT_DIR,
+		f"pred_mask{frame_number}.tif"
+	)
+
+
         tifffile.imwrite(output_path, masks.astype(np.uint16))
 
         detected_cells = len(np.unique(masks)) - 1
+
         print(
             f"[{index:2d}/{total_frames}] "
-            f"Frame {frame_name} | "
+            f"Frame {frame_filename} | "
             f"{detected_cells:3d} cells detected | "
 	    f"{elapsed_time:.3f} s | "
             f"Saved -> {os.path.basename(output_path)}"
         )
+
     except Exception as e:
         print(f"Error while processing {os.path.basename(image_path)}")
         print(e)
+
 
 print("\n" + "=" * 60)
 print("Segmentation completed successfully.")
