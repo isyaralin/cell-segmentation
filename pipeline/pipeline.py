@@ -129,5 +129,5 @@ if segmentation_times:
 	   f"Maximum time per image: "
 	   f"{max(segmentation_times):.3f} seconds"
 
-print("=" * 60
+print("=" * 60)
 
