@@ -1,4 +1,5 @@
 import os
+import argparse
 import csv
 import numpy as np
 import tifffile
@@ -12,6 +13,7 @@ DATA_DIR = os.path.join(BASE_DIR, "dataset1")
 PRED_DIR = os.path.join(BASE_DIR, "output_masks")
 VIS_DIR  = os.path.join(BASE_DIR, "visualizations")
 CSV_PATH = os.path.join(BASE_DIR, "pipeline", "results.csv")
+
 os.makedirs(VIS_DIR, exist_ok=True)
 
 if not os.path.isdir(DATA_DIR):
@@ -20,6 +22,23 @@ if not os.path.isdir(PRED_DIR):
     raise FileNotFoundError(f"Prediction directory not found:\n{PRED_DIR}\n\nRun pipeline.py first.")
 if not os.path.exists(CSV_PATH):
     raise FileNotFoundError(f"{CSV_PATH} not found.\nRun evaluate.py first.")
+
+# Command line arguments 
+parser = argparse.ArgumentParser(
+    description="Generate visualizations for selected frames"
+) 
+
+parser.add_argument(
+    "--frames",
+    nargs="*",
+    help=(
+        "Optional frame numbers to visualize, "
+        "for example --frames 20 35 72. "
+        "If omitted, representative frames are shown"
+    )
+) 
+
+args = parser.parse_args()
 
 # Load IoU values from CSV
 iou_scores = {}
@@ -30,11 +49,25 @@ with open(CSV_PATH, newline="") as csvfile:
 
 # Frames to visualize
 # Produce small amount (begining, during and the end)
-frames_to_show = [0, 20, 40, 60, 82]
+
+if args.frames:
+    frames_to_show = [
+        int(frame)
+        for frame in args.frames
+        if frame.isdigit()
+    ]
+
+else:
+    frames_to_show = [0, 20, 40, 60, 82]
 
 print("=" * 60)
 print("Generating Visualizations")
 print("=" * 60)
+
+print(
+    "Frames to visualize:"
+    ", ".join(str(frame) for frame in frames_to_show)
+)
 
 # Generate figures
 for frame in frames_to_show:
@@ -42,6 +75,15 @@ for frame in frames_to_show:
     image_path = os.path.join(DATA_DIR, f"img{frame_name}.tif")
     gt_path  = os.path.join(DATA_DIR, f"mask{frame_name}.tif")
     pred_path = os.path.join(PRED_DIR, f"pred_mask{frame_name}.tif")
+
+    
+    if not os.path.exists(image_path):
+        print(f"Image for frame {frame_name} not found, skipping")
+        continue 
+    
+    if not os.path.exists(gt_path):
+        print(f"Ground truth for frame {frame_name} not found, skipping")
+        continue 
 
     if not os.path.exists(pred_path):
         print(f"Prediction for frame {frame_name} not found, skipping.")
