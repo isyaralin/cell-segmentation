@@ -1,6 +1,7 @@
 import os
 import glob
 import csv
+import argparse
 import numpy as np
 import tifffile
 
@@ -16,26 +17,62 @@ if not os.path.isdir(GT_DIR):
 if not os.path.isdir(PRED_DIR):
     raise FileNotFoundError(f"Prediction directory not found:\n{PRED_DIR}\n\nRun pipeline.py first.")
 
+parser = argparse.ArgumentParser(
+    description="Evaluate cell segmentation predictions"
+)
+
+parser.add_argument(
+    "--frames",
+    nargs="+",
+    help="Optional frame numbers, for example --frames 0 20 72"
+)
+
+args = parser.parse_args()
+
 gt_files = sorted(glob.glob(os.path.join(GT_DIR,"mask*.tif")))
 pred_files = sorted(glob.glob(os.path.join(PRED_DIR,"pred_mask*.tif")))
 
-if len(gt_files) == 0:
+def get_frame_number(path, prefix):
+    return os.path.basename(path).replace(prefix, "").replace(".tif", "")
+
+gt_by_frame = {
+    get_frame_number(path, "mask"): path 
+    for path in gt_files
+}
+
+pred_by_frame = { 
+    get_frame_number(path, "pred_mask"): path
+    for path in pred_files
+}
+
+
+if not gt_by_frame:
     raise RuntimeError("No ground-truth masks found.")
-if len(pred_files) == 0:
+if not pred_by_frame:
     raise RuntimeError("No predicted masks found.\nRun pipeline.py first.")
-if len(gt_files) != len(pred_files):
-    print(f"Warning: GT masks={len(gt_files)}, Predicted masks={len(pred_files)}")
-    print("Only matching pairs will be evaluated.\n")
+
+matching_frames = sorted(set(gt_by_frame) & set(pred_by_frame))
+
+if args.frames:
+    requested_frames = {str(int(frame)).zfill(5) for frame in args.frames}
+    matching_frames = [frame for frame in matching_frames if frame in requested_frames]
+
+if not matching_frames:
+    raise RuntimeError("No matching ground-truth and prediction frames found")
 
 print("=" * 60)
 print("Evaluating Cellpose Baseline Segmentation")
 print("=" * 60)
-print(f"Frames to evaluate: {min(len(gt_files), len(pred_files))}\n")
+print(f"Frames to evaluate: {len(matching_frames)}\n")
 
 # Evaluation
 results = []
 
-for gt_path, pred_path in zip(gt_files, pred_files):
+for frame in matching_frames:
+
+    gt_path = gt_by_frame[frame]
+    pred_path = pred_by_frame[frame]
+
     gt = tifffile.imread(gt_path)
     pred = tifffile.imread(pred_path)
 
@@ -57,12 +94,13 @@ for gt_path, pred_path in zip(gt_files, pred_files):
     recall = intersection / gt_pixels if gt_pixels > 0 else 0.0
     f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
 
-    frame = os.path.basename(gt_path).replace("mask", "").replace(".tif", "")
+
+    frame_name = f"img{frame}.tif"
     results.append({
-        "frame": frame,
-        "gt_cells": gt_cells,
-        "pred_cells": pred_cells,
-        "count_error": count_error,
+        "frame_name": frame_name,
+        "gt_cell_count": gt_cells,
+        "pred_cell_count": pred_cells,
+        "cell_count_error": count_error,
         "iou": round(iou, 4),
         "dice": round(dice, 4),
         "precision": round(precision, 4),
@@ -99,7 +137,7 @@ print("=" * 60)
 # Save as CSV
 with open(CSV_OUT, "w", newline="") as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=[
-        "frame", "gt_cells", "pred_cells", "count_error",
+        "frame_name", "gt_cell_count", "pred_cell_count", "cell_count_error",
         "iou", "dice", "precision", "recall", "f1"
     ])
     writer.writeheader()
