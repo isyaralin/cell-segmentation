@@ -58,7 +58,12 @@ if args.frames:
     ]
 
 else:
-    frames_to_show = [0, 20, 40, 60, 82]
+    # by default, visualize all frames found in CSV 
+    frames_to_show = [
+        int(frame.replace("img", "").replace(".tif", ""))
+        for frame in iou_scores.keys()
+    ]
+
 
 print("=" * 60)
 print("Generating Visualizations")

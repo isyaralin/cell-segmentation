@@ -13,6 +13,7 @@ OUTPUT_DIR = os.path.join(BASE_DIR, "output_masks")
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+# Command line arguments 
 parser = argparse.ArgumentParser(
     description = "Run Cellpose segmentation on all or selected frames")
 
@@ -23,8 +24,6 @@ parser.add_argument(
          "If omitted, all frames are processed.")
 
 args = parser.parse_args()
-
-
 
 # Check if the dataset exists 
 if not os.path.isdir(DATA_DIR):
