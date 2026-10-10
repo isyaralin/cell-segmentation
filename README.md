@@ -19,7 +19,9 @@ The dataset currently contains 83 microscopy frames together with corresponding 
 The baseline implementation provides:
 
 * Automated Cellpose-based cell segmentation
-* Processing of all 83 microscopy frames
+* Processing all available microscopy frames by default
+* Optional selection of specific frames using the --frames command-line argument
+* Evaluation and visualization of all frames by default, with support for selecting specific frames
 * Ground-truth comparison
 * IoU evaluation
 * Dice score evaluation
@@ -105,7 +107,7 @@ isyar-ilsu-alin/
 │
 ├── visualizations/
 │   ├── ...
-│   └── generated visualization images
+│   └── generaPNG visualizationsges
 │
 └── pipeline/
     ├── pipeline.py
@@ -151,6 +153,14 @@ From the repository root:
 python3 pipeline/pipeline.py
 ```
 
+To process only specific frames, use the optional `--frames` argument. For example, to process frames 20, 35, and 72:
+
+```bash
+python3 pipeline/pipeline.py --frames 20 35 72
+```
+
+If `--frames` is omitted, all available frames are processed.
+
 This loads the Cellpose `cyto3` model and processes all microscopy frames.
 
 The predicted masks are saved to:
@@ -168,6 +178,14 @@ Run:
 ```bash
 python3 pipeline/evaluate.py
 ```
+
+To process only specific frames, use the optional `--frames` argument. For example, to process frames 20, 35, and 72:
+
+```bash
+python3 pipeline/pipeline.py --frames 20 35 72
+```
+
+If `--frames` is omitted, all available frames are processed.
 
 The evaluation compares the predicted masks against the ground-truth masks.
 
@@ -195,6 +213,16 @@ Run:
 ```bash
 python3 pipeline/visualize.py
 ```
+
+To evaluate only specific frames:
+
+```bash
+python3 pipeline/evaluate.py --frames 20 35 72
+```
+
+The results are written to `pipeline/results.csv`. The CSV includes the actual frame names, such as `img00020.tif`, rather than only numerical frame identifiers.
+
+**Note:** Running the evaluation on selected frames updates the CSV with the selected results. Run `python3 pipeline/evaluate.py` without `--frames` to regenerate the results for all available frames.
 
 This generates visualizations for selected segmentation results.
 
