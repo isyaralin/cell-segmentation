@@ -1,0 +1,160 @@
+# Additional Evaluation Metrics for the Cell Segmentation Project
+
+I found some additional evaluation metrics that might help improve the evaluation of my cell segmentation project.
+
+## 1. Aggregated Jaccard Index (AJI)
+
+AJI compares individual predicted objects with ground-truth objects and penalizes unmatched objects.
+
+- It is useful for investigating merged and incorrectly segmented cells.
+
+### Why it might be useful in my project
+
+In my current `evaluate.py`, I convert the masks into cell versus background. During this process, the evaluation loses the information about which pixels belong to which individual cell.
+
+I could create a new implementation using AJI to compare individual instances and then compare its results with my existing IoU and Dice scores.
+
+## 2. Average Precision (AP) for Instance Segmentation
+
+AP evaluates object matching at multiple IoU thresholds. The COCO evaluation framework commonly uses thresholds ranging from 0.50 to 0.95.
+
+### Why it might be useful in my project
+
+My current evaluation gives me one overall overlap score. It does not show how reliably individual cells are detected at different matching thresholds.
+
+I could implement a new method to calculate instance-level AP at different IoU thresholds and compare it with PQ and AJI.
+
+
+# Current Evaluation Methods Investigated
+
+1. **Panoptic Quality (PQ):** Evaluates object recognition and segmentation quality.
+2. **CTC SEG / DET:** Evaluates cell-specific segmentation and detection.
+3. **Boundary IoU:** Evaluates boundary accuracy.
+4. **Aggregated Jaccard Index (AJI):** Evaluates instance-level overlap.
+5. **Average Precision (AP):** Evaluates detection and instance matching across multiple IoU thresholds.
+
+I also found other evaluation methods and similar approaches, but I wanted to understand the previous methods more deeply. The following are the methods I investigated further and why I think they are a good fit for my project.
+
+# 1. Panoptic Quality (PQ): Evaluating Individual Cell Recognition and Segmentation
+
+**Purpose:** Evaluating instance segmentation, originally developed for general scenes containing objects such as people, cars and other objects.
+
+### The problem I noticed in my project
+
+In my current `evaluate.py`, I convert the predicted masks and ground-truth masks into binary masks:
+
+- 0 = Background
+- 1 = Cell
+
+This means that the evaluation does not distinguish between individual cells.
+
+One of the problems in my pipeline is that Cellpose can merge two different cells into one predicted object, even though the ground truth shows two separate cells.
+
+I implemented cell-count error to see the difference between the predicted and ground-truth cell counts, but this still does not tell me which individual objects were matched correctly.
+
+### How PQ works
+
+PQ evaluates segmentation at the individual-object level.
+
+It consists of two components:
+
+- **Recognition Quality (RQ):** Measures how correctly individual cells are identified. It considers true positives, false positives and false negatives.
+- **Segmentation Quality (SQ):** Measures how accurately the matched cells are segmented. It calculates the average IoU of matched objects.
+
+**PQ = RQ × SQ**
+
+### How could I improve my project using PQ?
+
+I think this would be useful because I already have individual cell labels in my predicted and ground-truth TIFF masks. However, my current evaluation converts them into binary masks before comparing them.
+
+I could preserve those individual labels and implement a separate evaluation script for instances that matches predicted cells with ground-truth cells.
+
+This would allow me to calculate PQ, SQ and RQ for each frame.
+
+I could then identify whether Cellpose mainly struggles with detecting individual cells or with producing accurate masks for the cells it has detected.
+
+This would give me a more detailed evaluation of the existing Cellpose baseline and a better way to measure whether future improvements actually improve individual-cell segmentation.
+
+# 2. Cell Tracking Challenge (CTC): How Well Does My Pipeline Perform on Cell Microscopy Data?
+
+**Purpose:** Evaluating cell segmentation, detection and tracking in microscopy sequences.
+
+### The problem I noticed in my project
+
+After learning about this evaluation, I noticed that my dataset currently contains 83 consecutive microscopy frames.
+
+My pipeline processes each frame independently. Cellpose segments the cells in every frame, but it does not maintain the identity of a cell between frames.
+
+For example:
+
+- Cell 1 in frame 0 might be labelled Cell 5 in frame 1.
+- The same cell might be labelled Cell 2 in frame 2.
+- There is currently no mechanism in my pipeline to confirm that these are actually the same cell.
+
+### What CTC offers
+
+- **SEG:** Evaluates how accurately individual reference cells are segmented.
+- **DET:** Evaluates whether the correct cells are detected.
+- **TRA:** Evaluates whether the relationships between cells across frames are correctly maintained.
+
+### How could I improve my project using CTC?
+
+I think this is useful because my project specifically focuses on cell segmentation in time-lapse microscopy.
+
+Instead of relying only on general segmentation metrics, I could use CTC SEG to evaluate my current predictions using an established evaluation method designed for cell microscopy.
+
+I would also investigate DET because my current evaluation does not fully describe whether individual cells are correctly detected.
+
+Later, if we decide to implement tracking as part of my thesis, I can use TRA to evaluate whether cell identities and their relationships are preserved correctly across frames.
+
+This would give me a more relevant evaluation approach for cell-segmentation research and a natural way to extend the evaluation when I implement tracking.
+
+# 3. Boundary IoU: How Accurately Does Cellpose Draw the Cell Outlines?
+
+**Purpose:** Evaluating object boundaries more sensitively than conventional mask IoU.
+
+### The problems I noticed in my project
+
+When looking at my baseline results, I noticed the following:
+
+- Recall: 0.9937
+- Precision: 0.8566
+
+This means that the model recovers almost all the reference foreground pixels, but a considerable amount of its predicted foreground does not correspond to the reference foreground.
+
+This could indicate that some predicted masks extend beyond the actual cell boundaries.
+
+I also inspected problematic segmentation examples and found cases where the predicted cell boundaries were larger than the ground-truth regions.
+
+However, I cannot conclude from precision and recall alone that all these errors are boundary-related.
+
+### How Boundary IoU works
+
+Standard IoU evaluates overlap across the entire object.
+
+Boundary IoU focuses on a region around the object boundary, making it more sensitive to differences in object outlines.
+
+### How could I improve my project using Boundary IoU?
+
+I think this would be useful because my current evaluation gives me an overall overlap score, but it does not specifically explain how accurately Cellpose follows the cell boundaries.
+
+I could implement Boundary IoU as an additional metric and calculate it using the same predicted and ground-truth masks.
+
+I could then compare it with standard IoU.
+
+If Boundary IoU reveals poorer performance, this could indicate that boundary inaccuracies are an important weakness in the current segmentation.
+
+This would also be useful when comparing the baseline with a future method using first-frame initialization.
+
+This method could provide a more specific understanding of boundary errors and another way to evaluate whether my future segmentation approach produces more accurate cell shapes.
+
+
+# How These Three Methods Complement Each Other
+
+Each method investigates a different weakness of my current pipeline:
+
+- **PQ:** Helps me understand whether individual cells are correctly detected and segmented.
+- **CTC:** Provides cell-specific evaluation for segmentation and detection, with the possibility of evaluating tracking later.
+- **Boundary IoU:** Helps me understand how accurately the predicted cell boundaries match the ground truth.
+
+Together, these methods would allow me to evaluate my current Cellpose baseline in more detail and provide better measurements when comparing it with future improvements, especially first-frame initialization and tracking.
