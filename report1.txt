@@ -1,0 +1,36 @@
+I started looking into existing evaluation methods that could improve the evaluation of my current segmentation pipeline.
+
+Current pipeline and its limitations:
+Currently, my pipeline uses the Cellpose model to segment 83 microscopy frames independently. My evaluate.py script compares the predicted masks with the ground-truth masks using IoU, Dice, precision, recall and cell-count error.
+
+I currently have baseline results with a mean IoU of 0.8520 and a mean Dice of 0.9200. However, I realised that my current evaluation mainly treats the masks as cell versus background. This means that it does not fully capture whether individual cells have been correctly separated or identified. 
+
+For example, two cells can be merged into one predicted object while much of the foreground still overlaps with the ground truth (This was the main reason for the worst score for single frame). Cell-count error can help identify some of these cases, but it does not describe the segmentation quality of individual cells.
+Here are the existing evaluation methods I found:
+
+Panoptic Quality (PQ): I think this could be useful for my project because it evaluates individual objects rather than only comparing the foreground pixels. 
+
+It combines
+Segmentation Quality (SQ): measures the overlap of matched objects.
+Recognition Quality (RQ): accounts for correctly matched, missed and incorrectly predicted objects. 
+
+My current code does not fully evaluate individual cell matches, I think adding PQ could help me understand whether the main problems come from cells not being detected correctly or from inaccurate segmentation of cells that were detected. It could also help me compare the current Cellpose baseline with a future approach that uses information from the first frame.
+
+Boundary IoU: I think this could complement my current IoU and Dice metrics because it focuses more specifically on object boundaries. 
+
+In my baseline results, recall is 0.9937 while precision is 0.8566. This shows that the model recovers most of the foreground but also predicts some additional foreground pixels. This will let me investigate whether boundary inaccuracies contribute to this difference. 
+
+Boundary IoU could help me understand whether the predicted cell outlines are accurate, rather than only measuring the overall overlap.
+Cell Tracking Challenge (CTC) measures: These were designed for cell segmentation and tracking. 
+
+SEG: evaluates the segmentation of individual cells, 
+DET: evaluates detection 
+TRA: evaluates tracking. 
+
+I already have predicted masks and ground-truth masks, I think SEG would be a useful next step for evaluating my current pipeline under a cell-specific pipeline. 
+DET could provide additional information about missed or incorrectly detected cells. 
+TRA would be more relevant later because my current pipeline processes each frame independently and does not yet maintain cell identities across frames.
+
+
+These are what I’ve been reading over the past two weeks. I will still need to check the official definitions and implementation requirements if we move on with one of them. I’ve been reading lots of evaluations and thought these are the ones that aligned with my current pipeline.
+
